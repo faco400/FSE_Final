@@ -10,6 +10,7 @@
 #include "wifi.h"
 #include "mqtt.h"
 #include "dht11.h"
+#include "led.h"
 
 SemaphoreHandle_t conexaoWifiSemaphore;
 SemaphoreHandle_t conexaoMQTTSemaphore;
@@ -92,4 +93,5 @@ void app_main(void)
   xTaskCreate(&conectadoWifi, "Conexão ao MQTT", 4096, NULL, 1, NULL);
   xTaskCreate(&trataComunicacaoComServidor, "Comunicação com Broker", 4096, NULL, 1, NULL);
   xTaskCreate(&leitura_dht11_temp_umidade, "Leitura de Umidade e temperatura do sensor DHT11", 4096, NULL, 1, NULL);
+  xTaskCreate(&led_routine, "Rotina do led", 4096, NULL, 1, NULL);
 }

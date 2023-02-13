@@ -10,9 +10,11 @@
 #include "mqtt.h"
 #include "dht11.h"
 #include "led.h"
-#include "lum.h"
+// #include "lum.h"
 #include "pwm.h"
 #include "nvs.h"
+
+#define ENERGY_MODE CONFIG_ENERGY_MODE
 
 SemaphoreHandle_t conexaoWifiSemaphore;
 SemaphoreHandle_t conexaoMQTTSemaphore;
@@ -29,26 +31,7 @@ void conectadoWifi(void *params)
   }
 }
 
-void trataComunicacaoComServidor(void *params)
-{
-  char mensagem[50];
 
-  if (xSemaphoreTake(conexaoMQTTSemaphore, portMAX_DELAY))
-  {
-    while (true)
-    {
-      float temperatura = 20.0 + (float)rand() / (float)(RAND_MAX / 10.0);
-      sprintf(mensagem, "{\"temperatura1\": %f}", temperatura);
-      mqtt_envia_mensagem("v1/devices/me/telemetry", mensagem);
-      mqtt_envia_mensagem("sensores/temperatura", mensagem);
-
-      // sprintf(JsonAtributos,"{\"quantidade de pinos\": 5,\n\"umidade\": 20}");
-      // mqtt_envia_mensagem("v1/devices/me/attributes", JsonAtributos);
-
-      vTaskDelay(3000 / portTICK_PERIOD_MS);
-    }
-  }
-}
 void leitura_dht11_temp_umidade()
 {
   char msg[50];
@@ -75,6 +58,34 @@ void leitura_dht11_temp_umidade()
       vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
   }
+}
+
+void modo_energia()
+{
+  config_pwm();
+  xTaskCreate(&leitura_dht11_temp_umidade, "Leitura de Umidade e temperatura do sensor DHT11", 2048, NULL, 1, NULL);
+}
+
+void modo_low_power()
+{
+  led_esp(1);
+}
+
+void trataComunicacaoComServidor(void *params)
+{
+
+  if (xSemaphoreTake(conexaoMQTTSemaphore, portMAX_DELAY))
+  {
+    if(ENERGY_MODE == true)
+    {
+      ESP_LOGI("MODE", "Acionando modo de energia");
+      modo_energia();
+    }else if(ENERGY_MODE == false){
+      ESP_LOGI("MODE", "Acionando modo de bateria(low power)");
+      modo_low_power();
+    }
+  }
+  vTaskDelete(NULL);
 }
 
 void app_main(void)

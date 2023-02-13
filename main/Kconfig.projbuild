@@ -26,3 +26,18 @@ menu "Outros"
         help
             Senha do WiFi (WPA or WPA2).
 endmenu
+
+menu "Operation Mode"
+    choice ESCOLHA_MODO
+        prompt "Modo de operação do dispositivo"
+        default ENERGY_MODE
+        help
+            Configuração do modo de operação (bateria ou energia) do dispositivo;
+            
+        config ENERGY_MODE
+            bool "Energia"
+           
+        config BATTERY_MODE
+            bool "Bateria"
+    endchoice
+endmenu

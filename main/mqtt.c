@@ -22,27 +22,37 @@
 
 #define TAG "MQTT"
 
+#include "cJSON.h"
+#include "pwm.h"
+#include "cJSON.h"
+#include "pwm.h"
+#include "led.h"
+#include "driver/gpio.h"
+
+
 extern SemaphoreHandle_t conexaoMQTTSemaphore;
 esp_mqtt_client_handle_t client;
 
 static void log_error_if_nonzero(const char *message, int error_code)
 {
-    if (error_code != 0) {
+    if (error_code != 0)
+    {
         ESP_LOGE(TAG, "Last error %s: 0x%x", message, error_code);
     }
 }
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
-    ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, (int) event_id);
+    ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, (int)event_id);
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
     int msg_id;
-    switch ((esp_mqtt_event_id_t)event_id) {
+    switch ((esp_mqtt_event_id_t)event_id)
+    {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
         xSemaphoreGive(conexaoMQTTSemaphore);
-        msg_id = esp_mqtt_client_subscribe(client, "dispositivos/#", 0);
+        msg_id = esp_mqtt_client_subscribe(client, "v1/devices/me/rpc/request/+", 0);
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -63,15 +73,47 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
+        cJSON *json = cJSON_Parse(event->data);
+        if (json == NULL)
+            return;
+
+        char *chave = cJSON_GetObjectItem(json, "method")->valuestring;
+        int valor = cJSON_GetObjectItem(json, "params")->valueint;
+
+        if (strcmp("ligar", chave) == 0)
+        {
+            led_esp(valor);
+           
+        }
+        if (strcmp("desligar", chave) == 0)
+        {
+            led_esp(valor);
+        }
+        if (strcmp("setRed", chave) == 0)
+        {
+            
+            set_pwm_red(valor);
+        }
+        if (strcmp("setGr", chave) == 0)
+        {
+            set_pwm_green(valor);
+        }
+        if (strcmp("setBl", chave) == 0)
+        {
+            set_pwm_blue(valor);
+        }
+ 
+ 
+
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
-        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
+        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT)
+        {
             log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
             log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
-            log_error_if_nonzero("captured as transport's socket errno",  event->error_handle->esp_transport_sock_errno);
+            log_error_if_nonzero("captured as transport's socket errno", event->error_handle->esp_transport_sock_errno);
             ESP_LOGI(TAG, "Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
-
         }
         break;
     default:
@@ -84,14 +126,13 @@ void mqtt_start()
 {
     esp_mqtt_client_config_t mqtt_config = {
         .broker.address.uri = "mqtt://164.41.98.25",
-        .credentials.username = "0EIRWvPmhxKYMyP0Qfv9"
-    };
+        .credentials.username = "0EIRWvPmhxKYMyP0Qfv9"};
     client = esp_mqtt_client_init(&mqtt_config);
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_mqtt_client_start(client);
 }
 
-void mqtt_envia_mensagem(char * topico, char * mensagem)
+void mqtt_envia_mensagem(char *topico, char *mensagem)
 {
     int message_id = esp_mqtt_client_publish(client, topico, mensagem, 0, 1, 0);
     ESP_LOGI(TAG, "Mesnagem enviada, ID: %d", message_id);

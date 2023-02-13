@@ -15,6 +15,8 @@
 #include "nvs.h"
 
 #define ENERGY_MODE CONFIG_ENERGY_MODE
+#define BATTERY_MODE CONFIG_BATTERY_MODE
+
 
 SemaphoreHandle_t conexaoWifiSemaphore;
 SemaphoreHandle_t conexaoMQTTSemaphore;
@@ -62,13 +64,12 @@ void leitura_dht11_temp_umidade()
 
 void modo_energia()
 {
-  config_pwm();
   xTaskCreate(&leitura_dht11_temp_umidade, "Leitura de Umidade e temperatura do sensor DHT11", 2048, NULL, 1, NULL);
 }
 
 void modo_low_power()
 {
-  led_esp(1);
+  xTaskCreate(&led_routine, "Rotina da led ESP32", 4096, NULL, 1, NULL);
 }
 
 void trataComunicacaoComServidor(void *params)
@@ -76,14 +77,13 @@ void trataComunicacaoComServidor(void *params)
 
   if (xSemaphoreTake(conexaoMQTTSemaphore, portMAX_DELAY))
   {
-    if(ENERGY_MODE == true)
-    {
+    #ifdef CONFIG_ENERGY_MODE
       ESP_LOGI("MODE", "Acionando modo de energia");
       modo_energia();
-    }else if(ENERGY_MODE == false){
+    #else
       ESP_LOGI("MODE", "Acionando modo de bateria(low power)");
       modo_low_power();
-    }
+    #endif
   }
   vTaskDelete(NULL);
 }

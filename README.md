@@ -1,32 +1,34 @@
-# _Sample project_
+# Fundamentos de Sistemas Embarcados - Trabalho Final
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
-
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+O objetivo deste trabalho é criar sensores e atuadores distribuídos baseados nos microcontroladores ESP32 interconectados via Wifi através do protocolo MQTT. Em nosso contexto, utilizamos o sensor DHT11 para aferir a temperatura ambiente
+em ºC e a umidade relativa do ar em %. Além disso, um led  rgb foi utilizado, sendo possivel realizar o controle PWM de cada uma das cores RGB do sensor, formando assim  cores diversas e em diferentes intensidades a depender das intensidade de cada cor presente em cada botão na DashBoard. Também foi implementada a ativação/desativação  do led da própria ESP32 com os botões presentes na dashboard.
 
 
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
 
-## Example folder contents
+## Plataforma utilizada
 
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
+Este trabalho foi realizado utilizando a Espressif através da [ESP-IDF VS Code Extension](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html#) .
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
+## Como rodar a aplicação
 
-Below is short explanation of remaining files in the project folder.
+- Clonar ou baixar os arquivos do repositório
 
+- Instalar o [ESP-IDF VS Code Extension](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html#) 
+- Abrir os arquivos do projeto no VSCode
+
+- Abrir o ESP-IDF Terminal no menu inferior do vscode e configurar as credenciais de Wifi com o seguinte comando: 
+
+```bash
+idf.py menuconfig
 ```
-├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
-```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
+- Conectar a ESP32 via cabo USB no Computador/Notebook
+
+- Utilizar  a opção no menu inferior do VSCode para fazer o Build, Flash e Monitor , iniciando assim a comunicação da ESP32 com  a DashBoard configurada.
+
+
+## DashBoard
+
+Nome: KayroViniciusVieira
+
+![image]()
